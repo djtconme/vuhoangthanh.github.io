@@ -1,115 +1,62 @@
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-local Humanoid = Character:WaitForChild("Humanoid")
+-- 🛠 Tạo GUI Menu
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local NoClipButton = Instance.new("TextButton")
+local TeleportButton = Instance.new("TextButton")
 
-local AutoMove = false
-local GodMode = false
-local NoClip = false
-local WalkSpeed = 10
+-- 🎨 Thiết lập GUI
+ScreenGui.Parent = game.CoreGui
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.Size = UDim2.new(0, 200, 0, 150)
+Frame.Position = UDim2.new(0.4, 0, 0.3, 0)
 
--- 🕒 Lấy thời gian bắt đầu game
-local GameStartTime = tick()
-local EndTime = GameStartTime + 600  -- 10 phút (600 giây)
+-- 🔲 Nút bật/tắt NoClip
+NoClipButton.Parent = Frame
+NoClipButton.Size = UDim2.new(0, 180, 0, 50)
+NoClipButton.Position = UDim2.new(0, 10, 0, 10)
+NoClipButton.Text = "NoClip: OFF"
+NoClipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- 🔹 Chống va chạm (Xuyên tường)
-RunService.Stepped:Connect(function()
-    if NoClip then
-        for _, v in pairs(Character:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.CanCollide = false
+-- ✈️ Nút bay đến cuối game
+TeleportButton.Parent = Frame
+TeleportButton.Size = UDim2.new(0, 180, 0, 50)
+TeleportButton.Position = UDim2.new(0, 10, 0, 70)
+TeleportButton.Text = "Bay đến cuối game"
+TeleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- 🏃‍♂️ Nhân vật của người chơi
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- 🚀 Biến điều khiển NoClip
+local noclip = false
+NoClipButton.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    NoClipButton.Text = "NoClip: " .. (noclip and "ON" or "OFF")
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclip then
+            for _, v in ipairs(character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
             end
         end
+    end)
+end)
+
+-- ✈️ Bay đến tọa độ cuối map
+TeleportButton.MouseButton1Click:Connect(function()
+    local endPosition = Vector3.new(-346, 50, -49060) -- 🔥 Điểm đến cuối game
+    local speed = 10 -- 🚀 Tốc độ bay (Đã chỉnh xuống 10)
+
+    while (rootPart.Position - endPosition).Magnitude > 5 do
+        rootPart.CFrame = rootPart.CFrame:Lerp(CFrame.new(endPosition), 0.05) -- Di chuyển mượt mà
+        task.wait(0.1) -- Chờ 0.1 giây mỗi lần cập nhật (tốc độ 10)
     end
-end)
 
--- 🔹 Bất tử
-task.spawn(function()
-    while true do
-        if GodMode then
-            Humanoid.Health = 100
-        end
-        task.wait(0.1)
-    end
-end)
-
--- 🔹 Di chuyển đến điểm cuối
-task.spawn(function()
-    while true do
-        if AutoMove then
-            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame:Lerp(CFrame.new(-346, 0, -49060), 0.02)
-        end
-        task.wait(0.1)
-    end
-end)
-
--- 🔹 Hiển thị UI đơn giản
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-
-local function CreateButton(name, pos, callback)
-    local button = Instance.new("TextButton", ScreenGui)
-    button.Size = UDim2.new(0, 200, 0, 50)
-    button.Position = UDim2.new(0, 10, 0, pos)
-    button.Text = name
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.MouseButton1Click:Connect(callback)
-end
-
-local CoordsLabel = Instance.new("TextLabel", ScreenGui)
-CoordsLabel.Size = UDim2.new(0, 200, 0, 30)
-CoordsLabel.Position = UDim2.new(0, 10, 0, 10)
-CoordsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-CoordsLabel.BackgroundTransparency = 1
-
-task.spawn(function()
-    while true do
-        local pos = HumanoidRootPart.Position
-        CoordsLabel.Text = string.format("Tọa độ: X=%.1f, Y=%.1f, Z=%.1f", pos.X, pos.Y, pos.Z)
-        task.wait(0.2)
-    end
-end)
-
-local TimerLabel = Instance.new("TextLabel", ScreenGui)
-TimerLabel.Size = UDim2.new(0, 200, 0, 30)
-TimerLabel.Position = UDim2.new(0, 10, 0, 40)
-TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TimerLabel.BackgroundTransparency = 1
-
-task.spawn(function()
-    while true do
-        local TimeLeft = math.max(0, EndTime - tick())
-        local minutes = math.floor(TimeLeft / 60)
-        local seconds = TimeLeft % 60
-        TimerLabel.Text = string.format("Thời gian còn lại: %02d:%02d", minutes, seconds)
-        if TimeLeft <= 0 then
-            TimerLabel.Text = "Hết thời gian!"
-            break
-        end
-        task.wait(1)
-    end
-end)
-
-CreateButton("Xuyên Tường (On/Off)", 80, function()
-    NoClip = not NoClip
-end)
-
-CreateButton("Bất Tử (On/Off)", 140, function()
-    GodMode = not GodMode
-end)
-
-CreateButton("Tự Động Đến Cuối (On/Off)", 200, function()
-    AutoMove = not AutoMove
-end)
-
-CreateButton("Tăng Tốc Độ", 260, function()
-    WalkSpeed = WalkSpeed + 5
-    Humanoid.WalkSpeed = WalkSpeed
-end)
-
-CreateButton("Giảm Tốc Độ", 320, function()
-    WalkSpeed = math.max(5, WalkSpeed - 5)
-    Humanoid.WalkSpeed = WalkSpeed
+    print("✅ Đã đến vị trí cuối game!")
 end)

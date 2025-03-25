@@ -6,8 +6,8 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích mới (lùi lại một chút trên trục Z)
-local endPosition = Vector3.new(-346, 50, -49050) -- Đổi từ -49060 thành -49050
+-- Tọa độ đích mới
+local endPosition = Vector3.new(-346, 50, -49040) -- Lùi về -49040
 
 -- Biến thời gian (10 phút = 600 giây)
 local CountdownTime = 600
@@ -28,7 +28,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Hàm di chuyển nhanh đến tọa độ đích và neo tại đó
+-- Hàm di chuyển nhanh đến tọa độ đích
 local function moveToEnd()
     if not r then
         warn("Không tìm thấy HumanoidRootPart!")
@@ -41,7 +41,7 @@ local function moveToEnd()
     local steps = math.floor(distance / speed)
     local stepTime = 1 / 120 -- 120 FPS
 
-    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 50, -49050)...")
+    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 50, -49040)...")
 
     -- Di chuyển nhanh từng bước nhỏ
     for i = 1, steps do
@@ -51,19 +51,9 @@ local function moveToEnd()
         task.wait(stepTime)
     end
 
-    -- Đặt vị trí cuối cùng và neo tại đó
+    -- Đặt vị trí cuối cùng và cho phép điều khiển
     r.CFrame = CFrame.new(endPosition)
-    print("Đã đến tọa độ đích (-346, 50, -49050)! Đang neo vị trí...")
-
-    -- Neo nhân vật tại điểm cuối
-    spawn(function()
-        while task.wait(0.05) do
-            if r and (r.Position - endPosition).Magnitude > 1 then
-                r.CFrame = CFrame.new(endPosition)
-                print("Phát hiện teleport ngược, neo lại vị trí!")
-            end
-        end
-    end)
+    print("Đã đến tọa độ đích (-346, 50, -49040)! Bạn có thể điều khiển nhân vật.")
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -146,4 +136,4 @@ spawn(updateTimer)
 spawn(updateCoords)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Tọa độ đích mới: (-346, 50, -49050).")
+print("Dead Rails Script đã được kích hoạt! Tọa độ đích mới: (-346, 50, -49040), có thể điều khiển sau khi đến.")

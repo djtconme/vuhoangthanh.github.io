@@ -6,7 +6,7 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích mới (Y=3, lùi về -49040)
+-- Tọa độ đích (giữ nguyên để thử)
 local endPosition = Vector3.new(-346, 3, -49040)
 
 -- Biến thời gian (10 phút = 600 giây)
@@ -39,7 +39,7 @@ local function toggleNoClip()
             end 
         end
         if h then
-            h:ChangeState(Enum.HumanoidStateType.GettingUp) -- Đặt lại trạng thái đứng
+            h:ChangeState(Enum.HumanoidStateType.GettingUp)
         end
         print("NoClip: TẮT")
     end
@@ -80,12 +80,9 @@ local function moveToEnd()
         task.wait(stepTime)
     end
 
-    -- Đặt vị trí cuối cùng và tắt NoClip để đứng trên đất
+    -- Đặt vị trí cuối cùng và giữ NoClip
     r.CFrame = CFrame.new(endPosition)
-    if NoClipEnabled then
-        toggleNoClip() -- Tắt NoClip sau khi đến đích
-    end
-    print("Đã đến tọa độ đích (-346, 3, -49040)! Bạn có thể điều khiển nhân vật.")
+    print("Đã đến tọa độ đích (-346, 3, -49040)! NoClip vẫn bật, thử dùng WASD để di chuyển.")
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -182,4 +179,4 @@ spawn(updateTimer)
 spawn(updateCoords)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Tọa độ đích mới: (-346, 3, -49040).")
+print("Dead Rails Script đã được kích hoạt! Tọa độ đích: (-346, 3, -49040), giữ NoClip để thử.")

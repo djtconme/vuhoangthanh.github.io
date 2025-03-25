@@ -27,7 +27,6 @@ local function toggleNoClip()
                 end 
             end
         end)
-        print("NoClip: BẬT")
     else
         if NoClipConnection then
             NoClipConnection:Disconnect()
@@ -39,9 +38,8 @@ local function toggleNoClip()
             end 
         end
         if h then
-            h:ChangeState(Enum.HumanoidStateType.GettingUp) -- Đặt lại trạng thái đứng
+            h:ChangeState(Enum.HumanoidStateType.GettingUp)
         end
-        print("NoClip: TẮT")
     end
 end
 
@@ -52,10 +50,10 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Hàm di chuyển nhanh đến tọa độ đích
-local function moveToEnd()
+-- Hàm di chuyển đến đích và kiểm tra reset
+local function moveToEnd(statusLabel)
     if not r then
-        warn("Không tìm thấy HumanoidRootPart!")
+        statusLabel.Text = "Lỗi: Không tìm thấy nhân vật!"
         return
     end
 
@@ -70,7 +68,7 @@ local function moveToEnd()
     local steps = math.floor(distance / speed)
     local stepTime = 1 / 120 -- 120 FPS
 
-    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 50, -49050)...")
+    statusLabel.Text = "Di chuyển đến (-346, 50, -49050)..."
 
     -- Di chuyển nhanh từng bước nhỏ
     for i = 1, steps do
@@ -80,9 +78,32 @@ local function moveToEnd()
         task.wait(stepTime)
     end
 
-    -- Đặt vị trí cuối cùng và giữ NoClip để tránh rơi
     r.CFrame = CFrame.new(endPosition)
-    print("Đã đến tọa độ đích (-346, 50, -49050)! NoClip vẫn bật để tránh reset. Bạn có thể điều khiển bằng WASD.")
+    statusLabel.Text = "Đã đến (-346, 50, -49050)! Kiểm tra reset khi rơi..."
+
+    -- Kiểm tra reset khi hạ độ cao
+    local currentY = 50
+    local groundY = -10 -- Giả định mặt đất tối đa là Y=-10
+    local stepY = -1 -- Hạ 1 đơn vị mỗi bước
+    local lastSafePos = r.Position
+
+    while currentY > groundY do
+        currentY = currentY + stepY
+        local testPos = Vector3.new(-346, currentY, -49050)
+        r.CFrame = CFrame.new(testPos)
+        statusLabel.Text = "Kiểm tra Y=" .. math.floor(currentY) .. "..."
+        task.wait(0.5) -- Đợi game xử lý
+
+        -- Kiểm tra xem có bị reset không
+        if (r.Position - testPos).Magnitude > 50 then
+            local resetPos = r.Position
+            statusLabel.Text = "Bị reset tại Y=" .. math.floor(currentY) .. "! Vị trí reset: " .. math.floor(resetPos.X) .. ", " .. math.floor(resetPos.Y) .. ", " .. math.floor(resetPos.Z)
+            return
+        end
+        lastSafePos = testPos
+    end
+
+    statusLabel.Text = "Đã hạ xuống Y=" .. math.floor(currentY) .. " mà không bị reset!"
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -90,7 +111,6 @@ local playerGui = p:WaitForChild("PlayerGui")
 local oldGui = playerGui:FindFirstChild("DeadRailsHackMenu")
 if oldGui then
     oldGui:Destroy()
-    print("Đã xóa giao diện cũ!")
 end
 
 -- Tạo menu GUI mới
@@ -100,14 +120,14 @@ ScreenGui.Parent = playerGui
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 220)
-Frame.Position = UDim2.new(0.5, -100, 0.5, -110)
+Frame.Size = UDim2.new(0, 200, 0, 260) -- Tăng chiều cao để chứa nhãn trạng thái
+Frame.Position = UDim2.new(0.5, -100, 0.5, -130)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
 MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
-MoveButton.Position = UDim2.new(0.1, 0, 0.08, 0)
+MoveButton.Position = UDim2.new(0.1, 0, 0.06, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
 MoveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -116,7 +136,7 @@ MoveButton.Parent = Frame
 
 local NoClipButton = Instance.new("TextButton")
 NoClipButton.Size = UDim2.new(0.8, 0, 0, 40)
-NoClipButton.Position = UDim2.new(0.1, 0, 0.28, 0)
+NoClipButton.Position = UDim2.new(0.1, 0, 0.23, 0)
 NoClipButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 NoClipButton.Text = "NoClip: OFF"
 NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -125,7 +145,7 @@ NoClipButton.Parent = Frame
 
 local TimerLabel = Instance.new("TextLabel")
 TimerLabel.Size = UDim2.new(0.8, 0, 0, 30)
-TimerLabel.Position = UDim2.new(0.1, 0, 0.48, 0)
+TimerLabel.Position = UDim2.new(0.1, 0, 0.4, 0)
 TimerLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 TimerLabel.Text = "Timer: 10:00"
 TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -134,16 +154,26 @@ TimerLabel.Parent = Frame
 
 local CoordLabel = Instance.new("TextLabel")
 CoordLabel.Size = UDim2.new(0.8, 0, 0, 30)
-CoordLabel.Position = UDim2.new(0.1, 0, 0.68, 0)
+CoordLabel.Position = UDim2.new(0.1, 0, 0.55, 0)
 CoordLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 CoordLabel.Text = "Coords: 0, 0, 0"
 CoordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 CoordLabel.TextSize = 14
 CoordLabel.Parent = Frame
 
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(0.8, 0, 0, 40)
+StatusLabel.Position = UDim2.new(0.1, 0, 0.7, 0)
+StatusLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+StatusLabel.Text = "Trạng thái: Chưa di chuyển"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextSize = 12
+StatusLabel.TextWrapped = true
+StatusLabel.Parent = Frame
+
 -- Gán sự kiện cho các nút
 MoveButton.MouseButton1Click:Connect(function()
-    spawn(moveToEnd)
+    spawn(function() moveToEnd(StatusLabel) end)
 end)
 
 NoClipButton.MouseButton1Click:Connect(function()
@@ -177,6 +207,3 @@ end
 -- Chạy bộ đếm ngược và tọa độ ngay lập tức
 spawn(updateTimer)
 spawn(updateCoords)
-
--- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Tọa độ đích: (-346, 50, -49050), giữ NoClip để tránh reset.")

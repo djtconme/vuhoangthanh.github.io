@@ -6,7 +6,7 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích
+-- Tọa độ đích ban đầu
 local endPosition = Vector3.new(-346, 50, -49050)
 
 -- Biến thời gian (10 phút = 600 giây)
@@ -79,9 +79,9 @@ local function moveToEnd(statusLabel)
     end
 
     r.CFrame = CFrame.new(endPosition)
-    statusLabel.Text = "Đã đến (-346, 50, -49050)! NoClip bật, dùng WASD hoặc tắt NoClip để kiểm tra."
+    statusLabel.Text = "Đã đến (-346, 50, -49050)! NoClip bật, tắt để kiểm tra reset."
 
-    -- Kiểm tra reset khi hạ độ cao (chạy khi tắt NoClip thủ công)
+    -- Kiểm tra reset khi NoClip tắt
     spawn(function()
         while NoClipEnabled do
             task.wait(0.1) -- Chờ NoClip tắt
@@ -89,16 +89,16 @@ local function moveToEnd(statusLabel)
 
         statusLabel.Text = "NoClip tắt, kiểm tra reset khi hạ độ cao..."
         local currentY = 50
-        local groundY = -10 -- Giả định mặt đất tối đa
-        local stepY = -0.5 -- Hạ 0.5 đơn vị mỗi bước
+        local groundY = 3 -- Mặt đất dự kiến
+        local stepY = -0.1 -- Hạ 0.1 đơn vị mỗi bước để chính xác hơn
         local lastSafePos = r.Position
 
-        while currentY > groundY do
+        while currentY >= groundY do
             currentY = currentY + stepY
             local testPos = Vector3.new(-346, currentY, -49050)
             r.CFrame = CFrame.new(testPos)
             statusLabel.Text = "Kiểm tra Y=" .. string.format("%.1f", currentY) .. "..."
-            task.wait(1) -- Đợi lâu hơn để game xử lý
+            task.wait(1) -- Đợi game xử lý
 
             -- Kiểm tra xem có bị reset không
             if (r.Position - testPos).Magnitude > 50 then

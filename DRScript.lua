@@ -6,8 +6,8 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích cuối cùng
-local finalPosition = Vector3.new(-346, 3, -49040)
+-- Tọa độ đích mới (sửa thành -49000)
+local finalPosition = Vector3.new(-346, 10, -49000) -- Y = 10, Z = -49000
 
 -- Biến thời gian (10 phút = 600 giây)
 local CountdownTime = 600
@@ -71,7 +71,7 @@ local function moveToEnd()
     local stepsPerSegment = math.floor(segmentDistance / speed)
     local stepTime = 1 / 120 -- 120 FPS
 
-    print("Bắt đầu di chuyển từng đoạn đến tọa độ (-346, 3, -49040)...")
+    print("Bắt đầu di chuyển từng đoạn đến tọa độ (-346, 10, -49000)...")
 
     -- Tính số đoạn cần di chuyển
     local numSegments = math.ceil(totalDistance / segmentDistance)
@@ -92,7 +92,7 @@ local function moveToEnd()
         r.CFrame = CFrame.new(targetPos) -- Đảm bảo đến đúng vị trí đoạn
         
         -- Kiểm tra xem có bị reset không
-        task.wait(0.5) -- Đợi một chút để game xử lý
+        task.wait(0.5) -- Đợi để game xử lý
         if (r.Position - targetPos).Magnitude > 100 then
             print("Bị reset tại đoạn " .. segment .. "! Tọa độ hiện tại: " .. tostring(r.Position))
             return -- Dừng lại nếu bị reset
@@ -101,7 +101,7 @@ local function moveToEnd()
 
     -- Đặt vị trí cuối cùng
     r.CFrame = CFrame.new(finalPosition)
-    print("Đã đến tọa độ đích (-346, 3, -49040)! NoClip vẫn bật, thử dùng WASD.")
+    print("Đã đến tọa độ đích (-346, 10, -49000)! NoClip vẫn bật, thử dùng WASD.")
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -125,7 +125,7 @@ Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
-MoveButton.Size = UDim2.new(0, 0, 0, 40)
+MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
 MoveButton.Position = UDim2.new(0.1, 0, 0.08, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
@@ -198,4 +198,4 @@ spawn(updateTimer)
 spawn(updateCoords)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Di chuyển từng đoạn đến (-346, 3, -49040).")
+print("Dead Rails Script đã được kích hoạt! Di chuyển từng đoạn đến (-346, 10, -49000).")

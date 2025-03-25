@@ -6,8 +6,8 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích (giữ nguyên để thử)
-local endPosition = Vector3.new(-346, 3, -49040)
+-- Tọa độ đích cuối cùng
+local finalPosition = Vector3.new(-346, 3, -49040)
 
 -- Biến thời gian (10 phút = 600 giây)
 local CountdownTime = 600
@@ -52,7 +52,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Hàm di chuyển nhanh đến tọa độ đích
+-- Hàm di chuyển từng đoạn đến tọa độ đích
 local function moveToEnd()
     if not r then
         warn("Không tìm thấy HumanoidRootPart!")
@@ -65,24 +65,43 @@ local function moveToEnd()
     end
 
     local startPosition = r.Position
-    local distance = (endPosition - startPosition).Magnitude
+    local totalDistance = (finalPosition - startPosition).Magnitude
+    local segmentDistance = 500 -- Khoảng cách mỗi đoạn (đơn vị)
     local speed = 200 -- Tốc độ di chuyển (đơn vị mỗi giây)
-    local steps = math.floor(distance / speed)
+    local stepsPerSegment = math.floor(segmentDistance / speed)
     local stepTime = 1 / 120 -- 120 FPS
 
-    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 3, -49040)...")
+    print("Bắt đầu di chuyển từng đoạn đến tọa độ (-346, 3, -49040)...")
 
-    -- Di chuyển nhanh từng bước nhỏ
-    for i = 1, steps do
-        local t = i / steps
-        local newPos = startPosition:Lerp(endPosition, t)
-        r.CFrame = CFrame.new(newPos)
-        task.wait(stepTime)
+    -- Tính số đoạn cần di chuyển
+    local numSegments = math.ceil(totalDistance / segmentDistance)
+    for segment = 1, numSegments do
+        local t = segment / numSegments
+        local targetPos = startPosition:Lerp(finalPosition, t)
+        
+        print("Di chuyển đến đoạn: " .. tostring(targetPos))
+        
+        -- Di chuyển trong từng đoạn
+        local segmentStart = r.Position
+        for i = 1, stepsPerSegment do
+            local stepT = i / stepsPerSegment
+            local newPos = segmentStart:Lerp(targetPos, stepT)
+            r.CFrame = CFrame.new(newPos)
+            task.wait(stepTime)
+        end
+        r.CFrame = CFrame.new(targetPos) -- Đảm bảo đến đúng vị trí đoạn
+        
+        -- Kiểm tra xem có bị reset không
+        task.wait(0.5) -- Đợi một chút để game xử lý
+        if (r.Position - targetPos).Magnitude > 100 then
+            print("Bị reset tại đoạn " .. segment .. "! Tọa độ hiện tại: " .. tostring(r.Position))
+            return -- Dừng lại nếu bị reset
+        end
     end
 
-    -- Đặt vị trí cuối cùng và giữ NoClip
-    r.CFrame = CFrame.new(endPosition)
-    print("Đã đến tọa độ đích (-346, 3, -49040)! NoClip vẫn bật, thử dùng WASD để di chuyển.")
+    -- Đặt vị trí cuối cùng
+    r.CFrame = CFrame.new(finalPosition)
+    print("Đã đến tọa độ đích (-346, 3, -49040)! NoClip vẫn bật, thử dùng WASD.")
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -106,7 +125,7 @@ Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
-MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
+MoveButton.Size = UDim2.new(0, 0, 0, 40)
 MoveButton.Position = UDim2.new(0.1, 0, 0.08, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
@@ -179,4 +198,4 @@ spawn(updateTimer)
 spawn(updateCoords)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Tọa độ đích: (-346, 3, -49040), giữ NoClip để thử.")
+print("Dead Rails Script đã được kích hoạt! Di chuyển từng đoạn đến (-346, 3, -49040).")

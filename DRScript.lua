@@ -12,6 +12,12 @@ local WalkSpeed = 10
 local AutoMove = false
 local GodMode = false
 local NoClip = false
+local CoordLabel
+local TimerLabel
+
+-- 🔹 Lấy thời gian game bắt đầu
+local GameStartTime = os.time()
+local EndTime = GameStartTime + 600 -- 10 phút (600 giây)
 
 -- 🔹 Xuyên tường
 function ToggleNoClip(state)
@@ -45,6 +51,33 @@ function AutoTeleport(state)
     end
 end
 
+-- 🔹 Cập nhật tọa độ theo thời gian thực
+function UpdateCoordinates()
+    while task.wait(0.2) do
+        if CoordLabel and HumanoidRootPart then
+            local pos = HumanoidRootPart.Position
+            CoordLabel:SetText(string.format("Tọa độ: X=%.1f, Y=%.1f, Z=%.1f", pos.X, pos.Y, pos.Z))
+        end
+    end
+end
+
+-- 🔹 Đếm ngược thời gian 10 phút từ lúc game bắt đầu
+function StartTimer()
+    while true do
+        local TimeLeft = math.max(0, EndTime - os.time())
+        local minutes = math.floor(TimeLeft / 60)
+        local seconds = TimeLeft % 60
+        if TimerLabel then
+            TimerLabel:SetText(string.format("Thời gian còn lại: %02d:%02d", minutes, seconds))
+        end
+        if TimeLeft <= 0 then
+            TimerLabel:SetText("Hết thời gian!")
+            break
+        end
+        task.wait(1)
+    end
+end
+
 -- 🛠️ Thêm các nút vào menu
 Window:AddToggle("Xuyên Tường", function(state)
     ToggleNoClip(state)
@@ -63,5 +96,10 @@ Window:AddSlider("Tốc độ di chuyển", {min = 5, max = 50, default = 10}, f
     Humanoid.WalkSpeed = value
 end)
 
-Library:Init()
+CoordLabel = Window:AddLabel("Tọa độ: Đang cập nhật...")
+TimerLabel = Window:AddLabel("Thời gian còn lại: 10:00")
 
+task.spawn(UpdateCoordinates)
+task.spawn(StartTimer)
+
+Library:Init()

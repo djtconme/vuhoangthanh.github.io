@@ -6,7 +6,7 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích mới (sửa thành -49000)
+-- Tọa độ đích
 local finalPosition = Vector3.new(-346, 10, -49000) -- Y = 10, Z = -49000
 
 -- Biến thời gian (10 phút = 600 giây)
@@ -125,7 +125,7 @@ Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
-MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
+MoveButton.Size = UDim2.new(0.8, 0, 0, 40) -- Sửa kích thước nút
 MoveButton.Position = UDim2.new(0.1, 0, 0.08, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
@@ -162,6 +162,7 @@ CoordLabel.Parent = Frame
 
 -- Gán sự kiện cho các nút
 MoveButton.MouseButton1Click:Connect(function()
+    print("Nút Move to End được nhấn!") -- Debug để xác nhận nút hoạt động
     spawn(moveToEnd)
 end)
 

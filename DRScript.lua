@@ -1,6 +1,3 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/uwuware"))()
-local Window = Library:CreateWindow("Dead Rails Hack")
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -8,98 +5,111 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 local Humanoid = Character:WaitForChild("Humanoid")
 
-local WalkSpeed = 10
 local AutoMove = false
 local GodMode = false
 local NoClip = false
-local CoordLabel
-local TimerLabel
+local WalkSpeed = 10
 
--- 🔹 Lấy thời gian game bắt đầu
-local GameStartTime = os.time()
-local EndTime = GameStartTime + 600 -- 10 phút (600 giây)
+-- 🕒 Lấy thời gian bắt đầu game
+local GameStartTime = tick()
+local EndTime = GameStartTime + 600  -- 10 phút (600 giây)
 
--- 🔹 Xuyên tường
-function ToggleNoClip(state)
-    NoClip = state
-    RunService.Stepped:Connect(function()
-        if NoClip then
-            for _, v in pairs(Character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
+-- 🔹 Chống va chạm (Xuyên tường)
+RunService.Stepped:Connect(function()
+    if NoClip then
+        for _, v in pairs(Character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
             end
         end
-    end)
-end
+    end
+end)
 
 -- 🔹 Bất tử
-function ToggleGodMode(state)
-    GodMode = state
-    while GodMode do
-        Humanoid.Health = 100
-        task.wait(0.1)
-    end
-end
-
--- 🔹 Tự động đi đến điểm cuối
-function AutoTeleport(state)
-    AutoMove = state
-    while AutoMove do
-        HumanoidRootPart.CFrame = HumanoidRootPart.CFrame:Lerp(CFrame.new(-346, 0, -49060), 0.02)
-        task.wait(0.1)
-    end
-end
-
--- 🔹 Cập nhật tọa độ theo thời gian thực
-function UpdateCoordinates()
-    while task.wait(0.2) do
-        if CoordLabel and HumanoidRootPart then
-            local pos = HumanoidRootPart.Position
-            CoordLabel:SetText(string.format("Tọa độ: X=%.1f, Y=%.1f, Z=%.1f", pos.X, pos.Y, pos.Z))
-        end
-    end
-end
-
--- 🔹 Đếm ngược thời gian 10 phút từ lúc game bắt đầu
-function StartTimer()
+task.spawn(function()
     while true do
-        local TimeLeft = math.max(0, EndTime - os.time())
+        if GodMode then
+            Humanoid.Health = 100
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- 🔹 Di chuyển đến điểm cuối
+task.spawn(function()
+    while true do
+        if AutoMove then
+            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame:Lerp(CFrame.new(-346, 0, -49060), 0.02)
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- 🔹 Hiển thị UI đơn giản
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+local function CreateButton(name, pos, callback)
+    local button = Instance.new("TextButton", ScreenGui)
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Position = UDim2.new(0, 10, 0, pos)
+    button.Text = name
+    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.MouseButton1Click:Connect(callback)
+end
+
+local CoordsLabel = Instance.new("TextLabel", ScreenGui)
+CoordsLabel.Size = UDim2.new(0, 200, 0, 30)
+CoordsLabel.Position = UDim2.new(0, 10, 0, 10)
+CoordsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CoordsLabel.BackgroundTransparency = 1
+
+task.spawn(function()
+    while true do
+        local pos = HumanoidRootPart.Position
+        CoordsLabel.Text = string.format("Tọa độ: X=%.1f, Y=%.1f, Z=%.1f", pos.X, pos.Y, pos.Z)
+        task.wait(0.2)
+    end
+end)
+
+local TimerLabel = Instance.new("TextLabel", ScreenGui)
+TimerLabel.Size = UDim2.new(0, 200, 0, 30)
+TimerLabel.Position = UDim2.new(0, 10, 0, 40)
+TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TimerLabel.BackgroundTransparency = 1
+
+task.spawn(function()
+    while true do
+        local TimeLeft = math.max(0, EndTime - tick())
         local minutes = math.floor(TimeLeft / 60)
         local seconds = TimeLeft % 60
-        if TimerLabel then
-            TimerLabel:SetText(string.format("Thời gian còn lại: %02d:%02d", minutes, seconds))
-        end
+        TimerLabel.Text = string.format("Thời gian còn lại: %02d:%02d", minutes, seconds)
         if TimeLeft <= 0 then
-            TimerLabel:SetText("Hết thời gian!")
+            TimerLabel.Text = "Hết thời gian!"
             break
         end
         task.wait(1)
     end
-end
-
--- 🛠️ Thêm các nút vào menu
-Window:AddToggle("Xuyên Tường", function(state)
-    ToggleNoClip(state)
 end)
 
-Window:AddToggle("Bất Tử", function(state)
-    ToggleGodMode(state)
+CreateButton("Xuyên Tường (On/Off)", 80, function()
+    NoClip = not NoClip
 end)
 
-Window:AddToggle("Tự động đến điểm cuối", function(state)
-    AutoTeleport(state)
+CreateButton("Bất Tử (On/Off)", 140, function()
+    GodMode = not GodMode
 end)
 
-Window:AddSlider("Tốc độ di chuyển", {min = 5, max = 50, default = 10}, function(value)
-    WalkSpeed = value
-    Humanoid.WalkSpeed = value
+CreateButton("Tự Động Đến Cuối (On/Off)", 200, function()
+    AutoMove = not AutoMove
 end)
 
-CoordLabel = Window:AddLabel("Tọa độ: Đang cập nhật...")
-TimerLabel = Window:AddLabel("Thời gian còn lại: 10:00")
+CreateButton("Tăng Tốc Độ", 260, function()
+    WalkSpeed = WalkSpeed + 5
+    Humanoid.WalkSpeed = WalkSpeed
+end)
 
-task.spawn(UpdateCoordinates)
-task.spawn(StartTimer)
-
-Library:Init()
+CreateButton("Giảm Tốc Độ", 320, function()
+    WalkSpeed = math.max(5, WalkSpeed - 5)
+    Humanoid.WalkSpeed = WalkSpeed
+end)

@@ -26,7 +26,7 @@ CountdownLabel.Position = UDim2.new(0, 0, 0.15, 0)
 CountdownLabel.TextColor3 = Color3.new(1, 1, 1)
 CountdownLabel.BackgroundTransparency = 1
 
--- Countdown Timer (10 minutes)
+-- Countdown Timer (10 minutes, chỉ đếm, không tắt menu)
 local TimeLeft = 600
 spawn(function()
     while TimeLeft > 0 do
@@ -34,7 +34,6 @@ spawn(function()
         TimeLeft = TimeLeft - 1
         wait(1)
     end
-    ScreenGui:Destroy()
 end)
 
 -- Function to create buttons

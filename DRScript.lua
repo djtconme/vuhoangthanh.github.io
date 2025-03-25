@@ -6,8 +6,8 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích
-local endPosition = Vector3.new(-346, 50, -49050)
+-- Tọa độ đích mới (Y=3, lùi về -49040)
+local endPosition = Vector3.new(-346, 3, -49040)
 
 -- Biến thời gian (10 phút = 600 giây)
 local CountdownTime = 600
@@ -70,7 +70,7 @@ local function moveToEnd()
     local steps = math.floor(distance / speed)
     local stepTime = 1 / 120 -- 120 FPS
 
-    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 50, -49050)...")
+    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 3, -49040)...")
 
     -- Di chuyển nhanh từng bước nhỏ
     for i = 1, steps do
@@ -80,12 +80,12 @@ local function moveToEnd()
         task.wait(stepTime)
     end
 
-    -- Đặt vị trí cuối cùng và tắt NoClip để điều khiển
+    -- Đặt vị trí cuối cùng và tắt NoClip để đứng trên đất
     r.CFrame = CFrame.new(endPosition)
     if NoClipEnabled then
         toggleNoClip() -- Tắt NoClip sau khi đến đích
     end
-    print("Đã đến tọa độ đích (-346, 50, -49050)! Bạn có thể điều khiển nhân vật.")
+    print("Đã đến tọa độ đích (-346, 3, -49040)! Bạn có thể điều khiển nhân vật.")
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -103,7 +103,7 @@ ScreenGui.Parent = playerGui
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 220) -- Tăng chiều cao để chứa nút NoClip
+Frame.Size = UDim2.new(0, 200, 0, 220)
 Frame.Position = UDim2.new(0.5, -100, 0.5, -110)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
@@ -182,4 +182,4 @@ spawn(updateTimer)
 spawn(updateCoords)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Tọa độ đích: (-346, 50, -49050), có thể điều khiển sau khi đến.")
+print("Dead Rails Script đã được kích hoạt! Tọa độ đích mới: (-346, 3, -49040).")

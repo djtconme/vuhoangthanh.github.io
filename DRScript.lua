@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
@@ -26,7 +27,7 @@ CountdownLabel.Position = UDim2.new(0, 0, 0.15, 0)
 CountdownLabel.TextColor3 = Color3.new(1, 1, 1)
 CountdownLabel.BackgroundTransparency = 1
 
--- Countdown Timer (10 minutes, chỉ đếm, không tắt menu)
+-- Countdown Timer (10 minutes, chỉ đếm)
 local TimeLeft = 600
 spawn(function()
     while TimeLeft > 0 do
@@ -48,37 +49,41 @@ local function createButton(text, position, callback)
     return button
 end
 
--- God Mode Toggle
+-- Fix God Mode (Chặn chết thay vì chỉnh máu)
 local GodMode = false
 local GodButton = createButton("God Mode: OFF", UDim2.new(0.05, 0, 0.3, 0), function()
     GodMode = not GodMode
     GodButton.Text = "God Mode: " .. (GodMode and "ON" or "OFF")
     if GodMode then
-        Humanoid.Health = math.huge
-        Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-            if GodMode then Humanoid.Health = math.huge end
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        Humanoid.HealthChanged:Connect(function()
+            if Humanoid.Health < 1 and GodMode then
+                Humanoid.Health = 100
+            end
         end)
+    else
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
     end
 end)
 
--- NoClip Toggle
+-- Fix NoClip (Chặn rollback)
 local NoClip = false
 local NoClipButton = createButton("NoClip: OFF", UDim2.new(0.05, 0, 0.45, 0), function()
     NoClip = not NoClip
     NoClipButton.Text = "NoClip: " .. (NoClip and "ON" or "OFF")
 end)
 
-game:GetService("RunService").Stepped:Connect(function()
+RunService.Stepped:Connect(function()
     if NoClip then
         for _, v in pairs(Character:GetDescendants()) do
-            if v:IsA("BasePart") then
+            if v:IsA("BasePart") and v.CanCollide then
                 v.CanCollide = false
             end
         end
     end
 end)
 
--- Speed Input
+-- Fix Speed Hack (Sử dụng VectorForce để tránh reset)
 local Speed = 16
 local SpeedLabel = Instance.new("TextLabel", Frame)
 SpeedLabel.Size = UDim2.new(0.9, 0, 0.1, 0)
@@ -100,9 +105,21 @@ local ApplySpeedButton = createButton("Apply Speed", UDim2.new(0.05, 0, 0.85, 0)
     local newSpeed = tonumber(SpeedInput.Text)
     if newSpeed and newSpeed >= 10 and newSpeed <= 50 then
         Speed = newSpeed
-        Humanoid.WalkSpeed = Speed
         SpeedLabel.Text = "Speed: " .. Speed
     else
         SpeedLabel.Text = "Invalid Speed!"
+    end
+end)
+
+local VelocityForce = Instance.new("BodyVelocity")
+VelocityForce.Velocity = Vector3.new(0, 0, 0)
+VelocityForce.MaxForce = Vector3.new(math.huge, 0, math.huge)
+
+RunService.RenderStepped:Connect(function()
+    if Humanoid.MoveDirection.Magnitude > 0 then
+        VelocityForce.Velocity = Humanoid.MoveDirection * Speed
+        VelocityForce.Parent = HumanoidRootPart
+    else
+        VelocityForce.Parent = nil
     end
 end)

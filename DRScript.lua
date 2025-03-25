@@ -9,6 +9,9 @@ local RunService = game:GetService("RunService")
 -- Tọa độ đích cuối cùng
 local endPosition = Vector3.new(-346, 50, -49060)
 
+-- Biến thời gian (10 phút = 600 giây)
+local CountdownTime = 600
+
 -- Tính năng NoClip (đi xuyên tường)
 RunService.Stepped:Connect(function()
     for _, v in pairs(c:GetDescendants()) do 
@@ -52,24 +55,49 @@ ScreenGui.Parent = p:WaitForChild("PlayerGui")
 ScreenGui.Name = "DeadRailsHackMenu"
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 100)
-Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+Frame.Size = UDim2.new(0, 200, 0, 120)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -60)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
 MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
-MoveButton.Position = UDim2.new(0.1, 0, 0.3, 0)
+MoveButton.Position = UDim2.new(0.1, 0, 0.15, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
 MoveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MoveButton.TextSize = 16
 MoveButton.Parent = Frame
 
--- Gán sự kiện cho nút
+-- Hiển thị bộ đếm ngược
+local TimerLabel = Instance.new("TextLabel")
+TimerLabel.Size = UDim2.new(0.8, 0, 0, 30)
+TimerLabel.Position = UDim2.new(0.1, 0, 0.55, 0)
+TimerLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+TimerLabel.Text = "Timer: 10:00"
+TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TimerLabel.TextSize = 16
+TimerLabel.Parent = Frame
+
+-- Gán sự kiện cho nút Move
 MoveButton.MouseButton1Click:Connect(function()
-    spawn(moveToEnd) -- Chạy hàm di chuyển trong luồng riêng để không làm treo script
+    spawn(moveToEnd) -- Chạy hàm di chuyển trong luồng riêng
 end)
 
+-- Hàm cập nhật bộ đếm ngược (chạy ngay khi script khởi động)
+local function updateTimer()
+    while CountdownTime > 0 do
+        task.wait(1)
+        CountdownTime = CountdownTime - 1
+        local minutes = math.floor(CountdownTime / 60)
+        local seconds = CountdownTime % 60
+        TimerLabel.Text = string.format("Timer: %02d:%02d", minutes, seconds)
+    end
+    TimerLabel.Text = "Timer: Expired"
+end
+
+-- Chạy bộ đếm ngược ngay lập tức
+spawn(updateTimer)
+
 -- Thông báo khi script chạy
-print("Dead Rails Move-to-End Script đã được kích hoạt!")
+print("Dead Rails Script đã được kích hoạt! Bộ đếm ngược bắt đầu.")

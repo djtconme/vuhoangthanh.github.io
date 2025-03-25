@@ -79,31 +79,38 @@ local function moveToEnd(statusLabel)
     end
 
     r.CFrame = CFrame.new(endPosition)
-    statusLabel.Text = "Đã đến (-346, 50, -49050)! Kiểm tra reset khi rơi..."
+    statusLabel.Text = "Đã đến (-346, 50, -49050)! NoClip bật, dùng WASD hoặc tắt NoClip để kiểm tra."
 
-    -- Kiểm tra reset khi hạ độ cao
-    local currentY = 50
-    local groundY = -10 -- Giả định mặt đất tối đa là Y=-10
-    local stepY = -1 -- Hạ 1 đơn vị mỗi bước
-    local lastSafePos = r.Position
-
-    while currentY > groundY do
-        currentY = currentY + stepY
-        local testPos = Vector3.new(-346, currentY, -49050)
-        r.CFrame = CFrame.new(testPos)
-        statusLabel.Text = "Kiểm tra Y=" .. math.floor(currentY) .. "..."
-        task.wait(0.5) -- Đợi game xử lý
-
-        -- Kiểm tra xem có bị reset không
-        if (r.Position - testPos).Magnitude > 50 then
-            local resetPos = r.Position
-            statusLabel.Text = "Bị reset tại Y=" .. math.floor(currentY) .. "! Vị trí reset: " .. math.floor(resetPos.X) .. ", " .. math.floor(resetPos.Y) .. ", " .. math.floor(resetPos.Z)
-            return
+    -- Kiểm tra reset khi hạ độ cao (chạy khi tắt NoClip thủ công)
+    spawn(function()
+        while NoClipEnabled do
+            task.wait(0.1) -- Chờ NoClip tắt
         end
-        lastSafePos = testPos
-    end
 
-    statusLabel.Text = "Đã hạ xuống Y=" .. math.floor(currentY) .. " mà không bị reset!"
+        statusLabel.Text = "NoClip tắt, kiểm tra reset khi hạ độ cao..."
+        local currentY = 50
+        local groundY = -10 -- Giả định mặt đất tối đa
+        local stepY = -0.5 -- Hạ 0.5 đơn vị mỗi bước
+        local lastSafePos = r.Position
+
+        while currentY > groundY do
+            currentY = currentY + stepY
+            local testPos = Vector3.new(-346, currentY, -49050)
+            r.CFrame = CFrame.new(testPos)
+            statusLabel.Text = "Kiểm tra Y=" .. string.format("%.1f", currentY) .. "..."
+            task.wait(1) -- Đợi lâu hơn để game xử lý
+
+            -- Kiểm tra xem có bị reset không
+            if (r.Position - testPos).Magnitude > 50 then
+                local resetPos = r.Position
+                statusLabel.Text = "Bị reset tại Y=" .. string.format("%.1f", currentY) .. "! Vị trí reset: " .. math.floor(resetPos.X) .. ", " .. math.floor(resetPos.Y) .. ", " .. math.floor(resetPos.Z)
+                return
+            end
+            lastSafePos = testPos
+        end
+
+        statusLabel.Text = "Đã hạ xuống Y=" .. string.format("%.1f", currentY) .. " mà không bị reset!"
+    end)
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -120,7 +127,7 @@ ScreenGui.Parent = playerGui
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 260) -- Tăng chiều cao để chứa nhãn trạng thái
+Frame.Size = UDim2.new(0, 200, 0, 260)
 Frame.Position = UDim2.new(0.5, -100, 0.5, -130)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui

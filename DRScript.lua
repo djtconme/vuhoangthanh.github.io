@@ -1,115 +1,173 @@
--- 🛠 Tạo GUI Menu
+-- Khai báo thư viện và biến
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+local RunService = game:GetService("RunService")
+
+-- Biến trạng thái NoClip
+local NoClipEnabled = false
+
+-- Thời gian đếm ngược (10 phút = 600 giây)
+local CountdownTime = 600
+local TimerRunning = false
+
+-- Tạo menu GUI
 local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "DeadRailsHackMenu"
+
 local Frame = Instance.new("Frame")
-local NoClipButton = Instance.new("TextButton")
-local TeleportButton = Instance.new("TextButton")
-local GodModeButton = Instance.new("TextButton")
-local TimerLabel = Instance.new("TextLabel")
-
--- 🎨 Thiết lập GUI
-ScreenGui.Parent = game.CoreGui
+Frame.Size = UDim2.new(0, 200, 0, 250)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -125)
+Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Frame.BorderSizePixel = 0
 Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Frame.Size = UDim2.new(0, 200, 0, 200)
-Frame.Position = UDim2.new(0.4, 0, 0.3, 0)
 
--- 🔲 Nút bật/tắt NoClip
-NoClipButton.Parent = Frame
-NoClipButton.Size = UDim2.new(0, 180, 0, 50)
-NoClipButton.Position = UDim2.new(0, 10, 0, 10)
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "Dead Rails Hack Menu"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Parent = Frame
+
+-- Nút bật/tắt NoClip
+local NoClipButton = Instance.new("TextButton")
+NoClipButton.Size = UDim2.new(0.9, 0, 0, 40)
+NoClipButton.Position = UDim2.new(0.05, 0, 0.15, 0)
+NoClipButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 NoClipButton.Text = "NoClip: OFF"
-NoClipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoClipButton.TextSize = 16
+NoClipButton.Parent = Frame
 
--- ✈️ Nút bay đến cuối game
-TeleportButton.Parent = Frame
-TeleportButton.Size = UDim2.new(0, 180, 0, 50)
-TeleportButton.Position = UDim2.new(0, 10, 0, 70)
-TeleportButton.Text = "Bay đến cuối game"
-TeleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+-- Nút dịch chuyển đến tọa độ
+local TeleportButton = Instance.new("TextButton")
+TeleportButton.Size = UDim2.new(0.9, 0, 0, 40)
+TeleportButton.Position = UDim2.new(0.05, 0, 0.35, 0)
+TeleportButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+TeleportButton.Text = "Teleport to (-346, 50, -49060)"
 TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportButton.TextSize = 16
+TeleportButton.Parent = Frame
 
--- 💖 Nút bất tử
-GodModeButton.Parent = Frame
-GodModeButton.Size = UDim2.new(0, 180, 0, 50)
-GodModeButton.Position = UDim2.new(0, 10, 0, 130)
-GodModeButton.Text = "Bất Tử: OFF"
-GodModeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-GodModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- ⏳ Nhãn đếm ngược 10 phút
-TimerLabel.Parent = Frame
-TimerLabel.Size = UDim2.new(0, 180, 0, 30)
-TimerLabel.Position = UDim2.new(0, 10, 0, 180)
-TimerLabel.Text = "Thời gian còn: 10:00"
+-- Hiển thị bộ đếm ngược
+local TimerLabel = Instance.new("TextLabel")
+TimerLabel.Size = UDim2.new(0.9, 0, 0, 30)
+TimerLabel.Position = UDim2.new(0.05, 0, 0.55, 0)
+TimerLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+TimerLabel.Text = "Timer: 10:00"
 TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TimerLabel.BackgroundTransparency = 1
+TimerLabel.TextSize = 16
+TimerLabel.Parent = Frame
 
--- 🏃‍♂️ Nhân vật của người chơi
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local rootPart = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
+-- Nút bật/tắt bộ đếm ngược
+local TimerButton = Instance.new("TextButton")
+TimerButton.Size = UDim2.new(0.9, 0, 0, 40)
+TimerButton.Position = UDim2.new(0.05, 0, 0.75, 0)
+TimerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+TimerButton.Text = "Start Timer"
+TimerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TimerButton.TextSize = 16
+TimerButton.Parent = Frame
 
--- 🚀 Biến điều khiển NoClip
-local noclip = false
-NoClipButton.MouseButton1Click:Connect(function()
-    noclip = not noclip
-    NoClipButton.Text = "NoClip: " .. (noclip and "ON" or "OFF")
-    game:GetService("RunService").Stepped:Connect(function()
-        if noclip then
-            for _, v in ipairs(character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
+-- Hàm NoClip
+local function ToggleNoClip()
+    NoClipEnabled = not NoClipEnabled
+    NoClipButton.Text = "NoClip: " .. (NoClipEnabled and "ON" or "OFF")
+    if NoClipEnabled then
+        RunService:BindToRenderStep("NoClip", Enum.RenderPriority.Character.Value, function()
+            for _, part in pairs(Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
                 end
             end
+        end)
+    else
+        RunService:UnbindFromRenderStep("NoClip")
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
         end
-    end)
-end)
-
--- ✈️ Bay đến tọa độ cuối map
-TeleportButton.MouseButton1Click:Connect(function()
-    local endPosition = Vector3.new(-346, 50, -49060) -- 🔥 Điểm đến cuối game
-    local speed = 10 -- 🚀 Tốc độ bay (Đã chỉnh xuống 10)
-
-    while (rootPart.Position - endPosition).Magnitude > 5 do
-        rootPart.CFrame = rootPart.CFrame:Lerp(CFrame.new(endPosition), 0.05) -- Di chuyển mượt mà
-        task.wait(0.1) -- Chờ 0.1 giây mỗi lần cập nhật (tốc độ 10)
     end
+end
 
-    print("✅ Đã đến vị trí cuối game!")
-end)
+-- Hàm dịch chuyển
+local function TeleportToCoords()
+    if RootPart then
+        RootPart.CFrame = CFrame.new(-346, 50, -49060)
+    end
+end
 
--- 💖 Bất tử
-local godmode = false
-GodModeButton.MouseButton1Click:Connect(function()
-    godmode = not godmode
-    GodModeButton.Text = "Bất Tử: " .. (godmode and "ON" or "OFF")
-end)
-
-task.spawn(function()
-    while true do
-        if godmode then
-            humanoid.Health = humanoid.MaxHealth
+-- Hàm cập nhật bộ đếm ngược
+local function UpdateTimer()
+    if TimerRunning then
+        while CountdownTime > 0 and TimerRunning do
+            wait(1)
+            CountdownTime = CountdownTime - 1
+            local minutes = math.floor(CountdownTime / 60)
+            local seconds = CountdownTime % 60
+            TimerLabel.Text = string.format("Timer: %02d:%02d", minutes, seconds)
         end
-        task.wait(0.1)
-    end
-end)
-
--- ⏳ Đếm ngược 10 phút từ khi game bắt đầu
-local startTime = tick()
-task.spawn(function()
-    while true do
-        local elapsed = tick() - startTime
-        local remaining = math.max(600 - elapsed, 0)
-        local minutes = math.floor(remaining / 60)
-        local seconds = remaining % 60
-        TimerLabel.Text = string.format("Thời gian còn: %02d:%02d", minutes, seconds)
-
-        if remaining <= 0 then
-            TimerLabel.Text = "Hết thời gian!"
-            break
+        if CountdownTime <= 0 then
+            TimerLabel.Text = "Timer: Expired"
+            TimerRunning = false
+            TimerButton.Text = "Start Timer"
         end
-        task.wait(1)
+    end
+end
+
+-- Hàm bật/tắt bộ đếm ngược
+local function ToggleTimer()
+    if not TimerRunning then
+        TimerRunning = true
+        CountdownTime = 600 -- Reset về 10 phút
+        TimerButton.Text = "Stop Timer"
+        spawn(UpdateTimer) -- Chạy bộ đếm ngược trong luồng riêng
+    else
+        TimerRunning = false
+        TimerButton.Text = "Start Timer"
+    end
+end
+
+-- Gán sự kiện cho các nút
+NoClipButton.MouseButton1Click:Connect(ToggleNoClip)
+TeleportButton.MouseButton1Click:Connect(TeleportToCoords)
+TimerButton.MouseButton1Click:Connect(ToggleTimer)
+
+-- Đảm bảo menu có thể kéo được
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
     end
 end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Thông báo khi script chạy
+print("Dead Rails Hack Menu đã được kích hoạt!")

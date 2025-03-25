@@ -6,44 +6,20 @@ local r = c:WaitForChild("HumanoidRootPart")
 local h = c:WaitForChild("Humanoid")
 local RunService = game:GetService("RunService")
 
--- Tọa độ đích
-local finalPosition = Vector3.new(-346, 10, -49000) -- Y = 10, Z = -49000
+-- Tọa độ đích mới (lùi lại một chút trên trục Z)
+local endPosition = Vector3.new(-346, 50, -49050) -- Đổi từ -49060 thành -49050
 
 -- Biến thời gian (10 phút = 600 giây)
 local CountdownTime = 600
 
--- Biến trạng thái NoClip
-local NoClipEnabled = false
-local NoClipConnection = nil
-
--- Hàm bật/tắt NoClip
-local function toggleNoClip()
-    NoClipEnabled = not NoClipEnabled
-    if NoClipEnabled then
-        NoClipConnection = RunService.Stepped:Connect(function()
-            for _, v in pairs(c:GetDescendants()) do 
-                if v:IsA("BasePart") then 
-                    v.CanCollide = false 
-                end 
-            end
-        end)
-        print("NoClip: BẬT")
-    else
-        if NoClipConnection then
-            NoClipConnection:Disconnect()
-            NoClipConnection = nil
-        end
-        for _, v in pairs(c:GetDescendants()) do 
-            if v:IsA("BasePart") then 
-                v.CanCollide = true 
-            end 
-        end
-        if h then
-            h:ChangeState(Enum.HumanoidStateType.GettingUp)
-        end
-        print("NoClip: TẮT")
+-- Tính năng NoClip (đi xuyên tường)
+RunService.Stepped:Connect(function()
+    for _, v in pairs(c:GetDescendants()) do 
+        if v:IsA("BasePart") then 
+            v.CanCollide = false 
+        end 
     end
-end
+end)
 
 -- Hack bất tử (giữ máu tối đa)
 RunService.Heartbeat:Connect(function()
@@ -52,57 +28,42 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Hàm di chuyển từng đoạn đến tọa độ đích
+-- Hàm di chuyển nhanh đến tọa độ đích và neo tại đó
 local function moveToEnd()
     if not r then
         warn("Không tìm thấy HumanoidRootPart!")
         return
     end
 
-    -- Bật NoClip trong quá trình di chuyển
-    if not NoClipEnabled then
-        toggleNoClip()
-    end
-
     local startPosition = r.Position
-    local totalDistance = (finalPosition - startPosition).Magnitude
-    local segmentDistance = 100 -- Giảm xuống 100 đơn vị mỗi đoạn
-    local speed = 50 -- Giảm tốc độ để tự nhiên hơn
-    local stepsPerSegment = math.floor(segmentDistance / speed)
-    local stepTime = 1 / 60 -- 60 FPS
+    local distance = (endPosition - startPosition).Magnitude
+    local speed = 200 -- Tốc độ di chuyển (đơn vị mỗi giây)
+    local steps = math.floor(distance / speed)
+    local stepTime = 1 / 120 -- 120 FPS
 
-    print("Bắt đầu di chuyển từng đoạn đến tọa độ (-346, 10, -49000)...")
-    print("Điểm xuất phát: " .. tostring(startPosition))
+    print("Bắt đầu di chuyển nhanh đến tọa độ (-346, 50, -49050)...")
 
-    -- Tính số đoạn cần di chuyển
-    local numSegments = math.ceil(totalDistance / segmentDistance)
-    for segment = 1, numSegments do
-        local t = segment / numSegments
-        local targetPos = startPosition:Lerp(finalPosition, t)
-        
-        print("Di chuyển đến đoạn " .. segment .. ": " .. tostring(targetPos))
-        
-        -- Di chuyển trong từng đoạn
-        local segmentStart = r.Position
-        for i = 1, stepsPerSegment do
-            local stepT = i / stepsPerSegment
-            local newPos = segmentStart:Lerp(targetPos, stepT)
-            r.CFrame = CFrame.new(newPos)
-            task.wait(stepTime)
-        end
-        r.CFrame = CFrame.new(targetPos) -- Đảm bảo đến đúng vị trí đoạn
-        
-        -- Kiểm tra xem có bị reset không
-        task.wait(1) -- Tăng thời gian chờ lên 1 giây
-        if (r.Position - targetPos).Magnitude > 50 then
-            print("Bị reset tại đoạn " .. segment .. "! Tọa độ hiện tại: " .. tostring(r.Position))
-            return -- Dừng lại nếu bị reset
-        end
+    -- Di chuyển nhanh từng bước nhỏ
+    for i = 1, steps do
+        local t = i / steps
+        local newPos = startPosition:Lerp(endPosition, t)
+        r.CFrame = CFrame.new(newPos)
+        task.wait(stepTime)
     end
 
-    -- Đặt vị trí cuối cùng
-    r.CFrame = CFrame.new(finalPosition)
-    print("Đã đến tọa độ đích (-346, 10, -49000)! NoClip vẫn bật, thử dùng WASD.")
+    -- Đặt vị trí cuối cùng và neo tại đó
+    r.CFrame = CFrame.new(endPosition)
+    print("Đã đến tọa độ đích (-346, 50, -49050)! Đang neo vị trí...")
+
+    -- Neo nhân vật tại điểm cuối
+    spawn(function()
+        while task.wait(0.05) do
+            if r and (r.Position - endPosition).Magnitude > 1 then
+                r.CFrame = CFrame.new(endPosition)
+                print("Phát hiện teleport ngược, neo lại vị trí!")
+            end
+        end
+    end)
 end
 
 -- Xóa giao diện cũ (nếu có)
@@ -120,32 +81,23 @@ ScreenGui.Parent = playerGui
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 220)
-Frame.Position = UDim2.new(0.5, -100, 0.5, -110)
+Frame.Size = UDim2.new(0, 200, 0, 180)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -90)
 Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
 MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
-MoveButton.Position = UDim2.new(0.1, 0, 0.08, 0)
+MoveButton.Position = UDim2.new(0.1, 0, 0.1, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
 MoveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MoveButton.TextSize = 16
 MoveButton.Parent = Frame
 
-local NoClipButton = Instance.new("TextButton")
-NoClipButton.Size = UDim2.new(0.8, 0, 0, 40)
-NoClipButton.Position = UDim2.new(0.1, 0, 0.28, 0)
-NoClipButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-NoClipButton.Text = "NoClip: OFF"
-NoClipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-NoClipButton.TextSize = 16
-NoClipButton.Parent = Frame
-
 local TimerLabel = Instance.new("TextLabel")
 TimerLabel.Size = UDim2.new(0.8, 0, 0, 30)
-TimerLabel.Position = UDim2.new(0.1, 0, 0.48, 0)
+TimerLabel.Position = UDim2.new(0.1, 0, 0.35, 0)
 TimerLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 TimerLabel.Text = "Timer: 10:00"
 TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -154,22 +106,16 @@ TimerLabel.Parent = Frame
 
 local CoordLabel = Instance.new("TextLabel")
 CoordLabel.Size = UDim2.new(0.8, 0, 0, 30)
-CoordLabel.Position = UDim2.new(0.1, 0, 0.68, 0)
+CoordLabel.Position = UDim2.new(0.1, 0, 0.6, 0)
 CoordLabel.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 CoordLabel.Text = "Coords: 0, 0, 0"
 CoordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 CoordLabel.TextSize = 14
 CoordLabel.Parent = Frame
 
--- Gán sự kiện cho các nút
+-- Gán sự kiện cho nút Move
 MoveButton.MouseButton1Click:Connect(function()
-    print("Nút Move to End được nhấn!")
     spawn(moveToEnd)
-end)
-
-NoClipButton.MouseButton1Click:Connect(function()
-    toggleNoClip()
-    NoClipButton.Text = "NoClip: " .. (NoClipEnabled and "ON" or "OFF")
 end)
 
 -- Hàm cập nhật bộ đếm ngược
@@ -200,4 +146,4 @@ spawn(updateTimer)
 spawn(updateCoords)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Di chuyển từng đoạn đến (-346, 10, -49000).")
+print("Dead Rails Script đã được kích hoạt! Tọa độ đích mới: (-346, 50, -49050).")

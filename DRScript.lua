@@ -36,20 +36,25 @@ local function moveToEnd()
 
     print("Bắt đầu di chuyển đến tọa độ (-346, 50, -49060)...")
 
-    -- Di chuyển từng bước nhỏ
     for i = 1, steps do
         local t = i / steps
-        local newPos = startPosition:Lerp(endPosition, t) -- Tính toán vị trí trung gian
+        local newPos = startPosition:Lerp(endPosition, t)
         r.CFrame = CFrame.new(newPos)
-        task.wait(stepTime) -- Chờ một khoảng thời gian nhỏ để mô phỏng di chuyển
+        task.wait(stepTime)
     end
 
-    -- Đảm bảo đến đúng tọa độ cuối
     r.CFrame = CFrame.new(endPosition)
     print("Đã đến tọa độ đích (-346, 50, -49060)!")
 end
 
--- Tạo menu GUI
+-- Xóa giao diện cũ nếu tồn tại
+local oldGui = p:WaitForChild("PlayerGui"):FindFirstChild("DeadRailsHackMenu")
+if oldGui then
+    oldGui:Destroy()
+    print("Đã xóa giao diện cũ!")
+end
+
+-- Tạo menu GUI mới
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = p:WaitForChild("PlayerGui")
 ScreenGui.Name = "DeadRailsHackMenu"
@@ -69,7 +74,6 @@ MoveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 MoveButton.TextSize = 16
 MoveButton.Parent = Frame
 
--- Hiển thị bộ đếm ngược
 local TimerLabel = Instance.new("TextLabel")
 TimerLabel.Size = UDim2.new(0.8, 0, 0, 30)
 TimerLabel.Position = UDim2.new(0.1, 0, 0.55, 0)
@@ -81,7 +85,7 @@ TimerLabel.Parent = Frame
 
 -- Gán sự kiện cho nút Move
 MoveButton.MouseButton1Click:Connect(function()
-    spawn(moveToEnd) -- Chạy hàm di chuyển trong luồng riêng
+    spawn(moveToEnd)
 end)
 
 -- Hàm cập nhật bộ đếm ngược (chạy ngay khi script khởi động)
@@ -100,4 +104,4 @@ end
 spawn(updateTimer)
 
 -- Thông báo khi script chạy
-print("Dead Rails Script đã được kích hoạt! Bộ đếm ngược bắt đầu.")
+print("Dead Rails Script đã được kích hoạt! Giao diện mới đã tải, bộ đếm ngược bắt đầu.")

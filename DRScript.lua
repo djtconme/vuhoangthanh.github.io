@@ -66,12 +66,13 @@ local function moveToEnd()
 
     local startPosition = r.Position
     local totalDistance = (finalPosition - startPosition).Magnitude
-    local segmentDistance = 500 -- Khoảng cách mỗi đoạn (đơn vị)
-    local speed = 200 -- Tốc độ di chuyển (đơn vị mỗi giây)
+    local segmentDistance = 100 -- Giảm xuống 100 đơn vị mỗi đoạn
+    local speed = 50 -- Giảm tốc độ để tự nhiên hơn
     local stepsPerSegment = math.floor(segmentDistance / speed)
-    local stepTime = 1 / 120 -- 120 FPS
+    local stepTime = 1 / 60 -- 60 FPS
 
     print("Bắt đầu di chuyển từng đoạn đến tọa độ (-346, 10, -49000)...")
+    print("Điểm xuất phát: " .. tostring(startPosition))
 
     -- Tính số đoạn cần di chuyển
     local numSegments = math.ceil(totalDistance / segmentDistance)
@@ -79,7 +80,7 @@ local function moveToEnd()
         local t = segment / numSegments
         local targetPos = startPosition:Lerp(finalPosition, t)
         
-        print("Di chuyển đến đoạn: " .. tostring(targetPos))
+        print("Di chuyển đến đoạn " .. segment .. ": " .. tostring(targetPos))
         
         -- Di chuyển trong từng đoạn
         local segmentStart = r.Position
@@ -92,8 +93,8 @@ local function moveToEnd()
         r.CFrame = CFrame.new(targetPos) -- Đảm bảo đến đúng vị trí đoạn
         
         -- Kiểm tra xem có bị reset không
-        task.wait(0.5) -- Đợi để game xử lý
-        if (r.Position - targetPos).Magnitude > 100 then
+        task.wait(1) -- Tăng thời gian chờ lên 1 giây
+        if (r.Position - targetPos).Magnitude > 50 then
             print("Bị reset tại đoạn " .. segment .. "! Tọa độ hiện tại: " .. tostring(r.Position))
             return -- Dừng lại nếu bị reset
         end
@@ -125,7 +126,7 @@ Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 Frame.Parent = ScreenGui
 
 local MoveButton = Instance.new("TextButton")
-MoveButton.Size = UDim2.new(0.8, 0, 0, 40) -- Sửa kích thước nút
+MoveButton.Size = UDim2.new(0.8, 0, 0, 40)
 MoveButton.Position = UDim2.new(0.1, 0, 0.08, 0)
 MoveButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MoveButton.Text = "Move to End"
@@ -162,7 +163,7 @@ CoordLabel.Parent = Frame
 
 -- Gán sự kiện cho các nút
 MoveButton.MouseButton1Click:Connect(function()
-    print("Nút Move to End được nhấn!") -- Debug để xác nhận nút hoạt động
+    print("Nút Move to End được nhấn!")
     spawn(moveToEnd)
 end)
 

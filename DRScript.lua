@@ -3,15 +3,18 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Marco8642/science/ref
 task.wait(1)
 
 local p = game.Players.LocalPlayer
-local c = p.Character or p.CharacterAdded:Wait()
+if not p.Character or not p.Character.Parent then
+    p.CharacterAdded:Wait() -- Đợi nhân vật load
+end
+local c = p.Character
 local r, h, g = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid"), c:FindFirstChild("Revolver") or p.Backpack:FindFirstChild("Revolver")
 
-local xuyênTường = false -- Biến lưu trạng thái đi xuyên tường
+local xuyênTường = false -- Trạng thái đi xuyên tường
 
 local function setXuyenTuong(state)
     for _, v in pairs(c:GetDescendants()) do
         if v:IsA("BasePart") then
-            v.CanCollide = not state -- Nếu `state` là true, tắt va chạm; nếu false, bật lại va chạm
+            v.CanCollide = not state
         end
     end
 end
@@ -25,8 +28,9 @@ local function shoot(b)
     end 
 end
 
--- Tạo GUI
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
+-- Tạo GUI an toàn
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = p:FindFirstChildOfClass("PlayerGui")
 
 -- Bộ đếm thời gian
 local timerLabel = Instance.new("TextLabel", screenGui)
@@ -54,6 +58,7 @@ toggleButton.MouseButton1Click:Connect(function()
     xuyênTường = not xuyênTường
     setXuyenTuong(xuyênTường)
     toggleButton.Text = "Đi xuyên tường: " .. (xuyênTường and "Bật" or "Tắt")
+    print("Nút được nhấn, trạng thái xuyên tường: ", xuyênTường)
 end)
 
 -- Bộ đếm ngược thời gian
@@ -69,43 +74,4 @@ task.spawn(function()
     timerLabel.Text = "Hết thời gian!"
 end)
 
-while task.wait(1.5) do -- Giảm lag bằng cách tăng thời gian chờ
-    local targets = {}
-
-    -- Lọc trước các mục tiêu hợp lệ
-    for _, b in ipairs(workspace:GetChildren()) do 
-        if b:IsA("Model") and b:FindFirstChild("Humanoid") and b ~= c then 
-            table.insert(targets, b)
-        end
-    end
-
-    -- Tấn công mục tiêu đã lọc
-    for _, b in ipairs(targets) do 
-        shoot(b) 
-        task.wait(0.5) 
-    end
-
-    local bonds, total = 0, 0
-    for _, bond in ipairs(workspace:GetChildren()) do 
-        if bond:IsA("Part") and bond.Name == "Bond" and bond.Parent and bond.Parent:IsA("Model") and bond.Parent.Name == "BanditHouse" then
-            total = total + 1
-            bond.CanCollide = false
-            bond.Anchored = false
-
-            r.CFrame = bond.CFrame + Vector3.new(0, 1, 0)
-            firetouchinterest(r, bond, 0)
-            firetouchinterest(r, bond, 1)
-
-            h:MoveTo(bond.Position + Vector3.new(0, 1, 0))
-            task.wait(0.5)
-            
-            bonds = bonds + 1
-            task.wait(0.2)
-        end 
-    end
-
-    if bonds > 0 and bonds == total and h then 
-        task.wait(1) 
-        h.Health = 0 
-    end
-end
+while task.wait(1.

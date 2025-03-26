@@ -1,6 +1,6 @@
 getfenv().death = false
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Marco8642/science/refs/heads/ok/dead%20rails"))()
-task.wait(1) 
+task.wait(1)
 
 local p, c = game.Players.LocalPlayer, p.Character or p.CharacterAdded:Wait()
 local r, h, g = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid"), c:FindFirstChild("Revolver") or p.Backpack:FindFirstChild("Revolver")
@@ -17,6 +17,15 @@ local function shoot(b)
         if e then e:FireServer(b.HumanoidRootPart.Position + Vector3.new(0, 1.5, 0)) end 
     end 
 end
+
+-- Thêm bộ đếm ngược 10 phút
+task.spawn(function()
+    for i = 10, 1, -1 do
+        print("Thời gian còn lại: " .. i .. " phút")
+        task.wait(60) -- Chờ 1 phút
+    end
+    print("Hết 10 phút!")
+end)
 
 while task.wait(1) do
     for _, b in ipairs(workspace:GetChildren()) do 

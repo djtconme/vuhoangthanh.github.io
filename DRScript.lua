@@ -1,20 +1,41 @@
+-- 🛠️ Tạo GUI Menu
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/uwuware"))()
+local window = library:CreateWindow("Dead Rails Hack")
+
+-- 🏴 Biến kiểm soát hack
 getfenv().death = false
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Marco8642/science/refs/heads/ok/dead%20rails"))()
-task.wait(1)
+local autoCollect = false
 
-local p = game.Players.LocalPlayer
-local c = p.Character or p.CharacterAdded:Wait()
-local r, h = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid")
+-- 🛠️ Bật/Tắt Auto Collect Bond
+window:Toggle("Auto Collect Bond", {flag = "autoCollect"})
 
--- 🔄 Tắt va chạm để tránh kẹt
+-- 🛠️ Nút Reset Nhân Vật
+window:Button("Reset Character", function()
+    local h = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if h then h.Health = 0 end
+end)
+
+library:Init()
+
+-- 🏃‍♂️ Tắt va chạm để tránh kẹt
 game:GetService("RunService").Stepped:Connect(function()
-    for _, v in pairs(c:GetDescendants()) do 
-        if v:IsA("BasePart") then v.CanCollide = false end 
+    local c = game.Players.LocalPlayer.Character
+    if c then
+        for _, v in pairs(c:GetDescendants()) do 
+            if v:IsA("BasePart") then v.CanCollide = false 
+            end
+        end
     end
 end)
 
+-- 🔄 Vòng lặp thu thập Bond
 while task.wait(1) do
-    -- 💰 Thu thập Bond
+    if not window.flags.autoCollect then continue end -- Kiểm tra nếu Auto Collect tắt
+
+    local p = game.Players.LocalPlayer
+    local c = p.Character or p.CharacterAdded:Wait()
+    local r, h = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid")
+
     local bonds, total = 0, 0
     for _, bond in ipairs(workspace:GetChildren()) do 
         if bond:IsA("Part") and bond.Name == "Bond" and bond.Parent and bond.Parent:IsA("Model") and bond.Parent.Name == "BanditHouse" then

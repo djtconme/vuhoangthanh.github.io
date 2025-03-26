@@ -1,75 +1,48 @@
--- Load UI Library
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = Library:MakeWindow({Name = "Dead Rails Hack", HidePremium = false, SaveConfig = true, ConfigFolder = "DeadRails"})
+getfenv().death = false
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Marco8642/science/refs/heads/ok/dead%20rails"))()
+task.wait(1)
 
--- Người chơi
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local rootPart = character:FindFirstChild("HumanoidRootPart")
-local humanoid = character:FindFirstChild("Humanoid")
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local r, h = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid")
 
--- Biến trạng thái
-local GodMode = false
-local AutoCollect = false
+-- 🔄 Tắt va chạm để tránh kẹt
+game:GetService("RunService").Stepped:Connect(function()
+    for _, v in pairs(c:GetDescendants()) do 
+        if v:IsA("BasePart") then v.CanCollide = false end 
+    end
+end)
 
--- Bật/Tắt Bất Tử
-function ToggleGodMode(state)
-    GodMode = state
-    while GodMode do
-        if humanoid then
-            humanoid.Health = math.huge
-        end
-        wait(0.5)
+while task.wait(1) do
+    -- 💰 Thu thập Bond
+    local bonds, total = 0, 0
+    for _, bond in ipairs(workspace:GetChildren()) do 
+        if bond:IsA("Part") and bond.Name == "Bond" and bond.Parent and bond.Parent:IsA("Model") and bond.Parent.Name == "BanditHouse" then
+            total = total + 1
+            
+            bond.CanCollide = false
+            bond.Anchored = false
+            
+            -- Bay đến Bond
+            r.CFrame = bond.CFrame + Vector3.new(0, 1, 0)
+            task.wait(0.1)
+            
+            -- Chạm vào Bond
+            firetouchinterest(r, bond, 0)
+            firetouchinterest(r, bond, 1)
+
+            -- Di chuyển humanoid đến Bond
+            h:MoveTo(bond.Position + Vector3.new(0, 1, 0))
+            task.wait(0.5)
+            
+            bonds = bonds + 1
+            task.wait(0.2)
+        end 
+    end
+
+    -- ⚰️ Reset nếu lấy hết Bond
+    if bonds > 0 and bonds == total and h then 
+        task.wait(1) 
+        h.Health = 0 
     end
 end
-
--- Dịch chuyển đến Bonds
-function TeleportToBonds()
-    for _, v in pairs(game.Workspace:GetChildren()) do
-        if v:IsA("Part") and v.Name == "Bond" then
-            rootPart.CFrame = v.CFrame
-            wait(0.5)
-        end
-    end
-end
-
--- Auto Collect Bonds
-function AutoCollectBonds(state)
-    AutoCollect = state
-    while AutoCollect do
-        TeleportToBonds()
-        wait(3)
-    end
-end
-
--- Tạo Tab chính
-local MainTab = Window:MakeTab({ Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false })
-
--- Nút Bật/Tắt Bất Tử
-MainTab:AddToggle({
-    Name = "God Mode",
-    Default = false,
-    Callback = function(state)
-        ToggleGodMode(state)
-    end
-})
-
--- Nút Teleport đến Bonds
-MainTab:AddButton({
-    Name = "Teleport to Bonds",
-    Callback = function()
-        TeleportToBonds()
-    end
-})
-
--- Nút Auto Collect Bonds
-MainTab:AddToggle({
-    Name = "Auto Collect Bonds",
-    Default = false,
-    Callback = function(state)
-        AutoCollectBonds(state)
-    end
-})
-
--- Hiển thị GUI
-Library:Init()

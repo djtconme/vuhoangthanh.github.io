@@ -2,7 +2,8 @@ getfenv().death = false
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Marco8642/science/refs/heads/ok/dead%20rails"))()
 task.wait(1)
 
-local p, c = game.Players.LocalPlayer, p.Character or p.CharacterAdded:Wait()
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
 local r, h, g = c:FindFirstChild("HumanoidRootPart"), c:FindFirstChild("Humanoid"), c:FindFirstChild("Revolver") or p.Backpack:FindFirstChild("Revolver")
 
 game:GetService("RunService").Stepped:Connect(function()
@@ -18,13 +19,31 @@ local function shoot(b)
     end 
 end
 
--- Thêm bộ đếm ngược 10 phút
+-- Tạo GUI cho bộ đếm ngược
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.CoreGui
+
+local timerLabel = Instance.new("TextLabel")
+timerLabel.Parent = screenGui
+timerLabel.Size = UDim2.new(0, 200, 0, 50)
+timerLabel.Position = UDim2.new(0.5, -100, 0, 20) -- Hiển thị ở trên cùng giữa màn hình
+timerLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+timerLabel.TextColor3 = Color3.new(1, 1, 1)
+timerLabel.TextSize = 20
+timerLabel.Font = Enum.Font.SourceSansBold
+timerLabel.Text = "10:00"
+
+-- Bộ đếm ngược 10 phút
 task.spawn(function()
-    for i = 10, 1, -1 do
-        print("Thời gian còn lại: " .. i .. " phút")
-        task.wait(60) -- Chờ 1 phút
+    local timeLeft = 600 -- 10 phút = 600 giây
+    while timeLeft > 0 do
+        local minutes = math.floor(timeLeft / 60)
+        local seconds = timeLeft % 60
+        timerLabel.Text = string.format("%02d:%02d", minutes, seconds)
+        task.wait(1)
+        timeLeft = timeLeft - 1
     end
-    print("Hết 10 phút!")
+    timerLabel.Text = "Hết thời gian!"
 end)
 
 while task.wait(1) do

@@ -1,36 +1,46 @@
--- 🛠️ Tạo GUI Menu
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/uwuware"))()
-local window = library:CreateWindow("Dead Rails Hack")
+-- 🛠️ Tạo GUI Menu với SimpleUI
+local SimpleUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/MaterialLua/main/Module.lua"))()
+local window = SimpleUI.Load({
+    Title = "Dead Rails Hack",
+    Style = 3,
+    SizeX = 300,
+    SizeY = 200,
+    Theme = "Dark"
+})
 
--- 🏴 Biến kiểm soát hack
-getfenv().death = false
 local autoCollect = false
 
--- 🛠️ Bật/Tắt Auto Collect Bond
-window:Toggle("Auto Collect Bond", {flag = "autoCollect"})
+-- 🏴 Bật/Tắt Auto Collect Bond
+local mainTab = window.New({Title = "Main"})
+mainTab.Toggle({
+    Text = "Auto Collect Bond",
+    Callback = function(value)
+        autoCollect = value
+    end
+})
 
 -- 🛠️ Nút Reset Nhân Vật
-window:Button("Reset Character", function()
-    local h = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if h then h.Health = 0 end
-end)
-
-library:Init()
+mainTab.Button({
+    Text = "Reset Character",
+    Callback = function()
+        local h = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+        if h then h.Health = 0 end
+    end
+})
 
 -- 🏃‍♂️ Tắt va chạm để tránh kẹt
 game:GetService("RunService").Stepped:Connect(function()
     local c = game.Players.LocalPlayer.Character
     if c then
         for _, v in pairs(c:GetDescendants()) do 
-            if v:IsA("BasePart") then v.CanCollide = false 
-            end
+            if v:IsA("BasePart") then v.CanCollide = false end
         end
     end
 end)
 
 -- 🔄 Vòng lặp thu thập Bond
 while task.wait(1) do
-    if not window.flags.autoCollect then continue end -- Kiểm tra nếu Auto Collect tắt
+    if not autoCollect then continue end -- Kiểm tra nếu Auto Collect tắt
 
     local p = game.Players.LocalPlayer
     local c = p.Character or p.CharacterAdded:Wait()
